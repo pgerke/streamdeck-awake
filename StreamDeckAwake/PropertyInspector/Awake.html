@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,minimal-ui,viewport-fit=cover">
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-status-bar-style content=black>
+    <title>Awake Switch Settings</title>
+    <link rel="stylesheet" href="sdpi.css">
+    <script src="sdtools.common.js"></script>
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="sdpi-item" id="divAwakeExePath">
+            <div class="sdpi-item-label">Awake Executable Path</div>
+            <input class="sdpi-item-value sdProperty" type="text" placeholder="%PROGRAMFILES%\PowerToys\modules\Awake\PowerToys.Awake.exe" value="" id="awakeExePath" oninput="setSettings()">
+        </div>
+        <!--<div class="sdpi-item" id="divDisplayOn">
+            <div class="sdpi-item-label">Display On</div>
+            <input class="sdpi-item-value sdProperty sdCheckbox" type="checkbox" placeholder="" value="" id="displayOn" oninput="setSettings()">
+        </div>-->
+        <!--<div class="sdpi-item" id="divTimeLimit">
+            <div class="sdpi-item-label">Time Limit (seconds)</div>
+            <input class="sdpi-item-value sdProperty" type="number" placeholder="0" value="" id="timeLimit" oninput="setSettings()" min="0" step="1">
+        </div>-->
+    </div>
+</body>
+</html>

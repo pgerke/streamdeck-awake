@@ -1,0 +1,46 @@
+{
+  "Actions": [
+    {
+      "Icon": "Images/actionIconAwake",
+      "Name": "Awake",
+      "States": [
+        {
+          "Image": "Images/awakeUnknown",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        },
+        {
+          "Image": "Images/awakeOff",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        },
+        {
+          "Image": "Images/awakeOn",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "Toggles the PowerToys Awake function",
+      "UUID": "com.philipgerke.awake.toggle",
+      "PropertyInspectorPath": "PropertyInspector/Awake.html"
+    }
+  ],
+  "SDKVersion": 2,
+  "Author": "Philip Gerke",
+  "CodePath": "com.philipgerke.awake",
+  "Description": "A PowerToys Awake plugin for the Elgato Stream Deck",
+  "Name": "PowerToys Awake",
+  "Icon": "Images/pluginIcon",
+  "URL": "https://github.com/pgerke/streamdeck-awake/",
+  "Version": "1.0.0",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "4.4.1"
+  }
+}

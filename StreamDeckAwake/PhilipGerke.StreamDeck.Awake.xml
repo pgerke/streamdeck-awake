@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>com.philipgerke.awake</name>
+    </assembly>
+    <members>
+        <member name="T:PhilipGerke.StreamDeck.Awake.AwakePlugin">
+            <summary>
+                The Stream Deck Awake plugin.
+            </summary>
+        </member>
+        <member name="P:PhilipGerke.StreamDeck.Awake.AwakePlugin.Settings">
+            <summary>
+                Gets or sets the plugin settings.
+            </summary>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.#ctor(BarRaider.SdTools.ISDConnection,BarRaider.SdTools.InitialPayload)">
+            <summary>
+                Constructs a new <see cref="T:PhilipGerke.StreamDeck.Awake.AwakePlugin"/> instance.
+            </summary>
+            <param name="connection">The Stream Deck connection.</param>
+            <param name="payload">The initial payload.</param>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.KeyPressed(BarRaider.SdTools.KeyPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.KeyReleased(BarRaider.SdTools.KeyPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.OnTick">
+            <inheritdoc />
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.ReceivedGlobalSettings(BarRaider.SdTools.ReceivedGlobalSettingsPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.ReceivedSettings(BarRaider.SdTools.ReceivedSettingsPayload)">
+            <inheritdoc />
+        </member>
+        <member name="T:PhilipGerke.StreamDeck.Awake.Program">
+            <summary>
+                The entry point class.
+            </summary>
+        </member>
+        <member name="T:PhilipGerke.StreamDeck.Awake.Settings">
+            <summary>
+                The settings for the Awake plugin.
+            </summary>
+        </member>
+        <member name="P:PhilipGerke.StreamDeck.Awake.Settings.AwakeExecutablePath">
+            <summary>
+                Gets or sets the path to the Awake executable.
+            </summary>
+        </member>
+        <member name="P:PhilipGerke.StreamDeck.Awake.Settings.DisplayOn">
+            <summary>
+                Gets or sets whether the screens should be kept on or off while the machine is kept awake.
+            </summary>
+        </member>
+        <member name="P:PhilipGerke.StreamDeck.Awake.Settings.TimeLimit">
+            <summary>
+                Gets or sets the duration, in seconds, during which Awake keeps the computer awake. Can be used in combination with <see cref="P:PhilipGerke.StreamDeck.Awake.Settings.DisplayOn"/>.
+            </summary>
+        </member>
+    </members>
+</doc>
