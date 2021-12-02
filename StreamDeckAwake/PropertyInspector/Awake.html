@@ -13,16 +13,30 @@
     <div class="sdpi-wrapper">
         <div class="sdpi-item" id="divAwakeExePath">
             <div class="sdpi-item-label">Awake Executable Path</div>
-            <input class="sdpi-item-value sdProperty" type="text" placeholder="%PROGRAMFILES%\PowerToys\modules\Awake\PowerToys.Awake.exe" value="" id="awakeExePath" oninput="setSettings()">
+            <div class="sdpi-item-value">
+                <input class="sdProperty" type="text" placeholder="%PROGRAMFILES%\PowerToys\modules\Awake\PowerToys.Awake.exe" value="" id="awakeExePath" oninput="setSettings()">
+            </div>
         </div>
-        <!--<div class="sdpi-item" id="divDisplayOn">
-            <div class="sdpi-item-label">Display On</div>
-            <input class="sdpi-item-value sdProperty sdCheckbox" type="checkbox" placeholder="" value="" id="displayOn" oninput="setSettings()">
-        </div>-->
-        <!--<div class="sdpi-item" id="divTimeLimit">
+        <div type="checkbox" class="sdpi-item" id="divUsePtConfig">
+            <div class="sdpi-item-label">Config</div>
+            <div class="sdpi-item-value">
+                <input class="sdProperty sdCheckbox" type="checkbox" value="" id="usePtConfig" oninput="setSettings()">
+                <label for="usePtConfig" class="sdpi-item-label"><span></span>Use PowerToys configuration</label>
+            </div>
+        </div>
+        <div type="checkbox" class="sdpi-item" id="divDisplayOn">
+            <div class="sdpi-item-label">Display</div>
+            <div class="sdpi-item-value">
+                <input class="sdProperty sdCheckbox" type="checkbox" value="" id="displayOn" oninput="setSettings()">
+                <label for="displayOn" class="sdpi-item-label"><span></span>Keep Display On</label>
+            </div>
+        </div>
+        <div class="sdpi-item" id="divTimeLimit">
             <div class="sdpi-item-label">Time Limit (seconds)</div>
-            <input class="sdpi-item-value sdProperty" type="number" placeholder="0" value="" id="timeLimit" oninput="setSettings()" min="0" step="1">
-        </div>-->
+            <div class="sdpi-item-value">
+                <input class="sdProperty" type="number" placeholder="0" value="" id="timeLimit" oninput="setSettings()" min="0" step="1">
+            </div>
+        </div>
     </div>
 </body>
 </html>

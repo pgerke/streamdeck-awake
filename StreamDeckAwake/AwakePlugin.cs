@@ -98,15 +98,20 @@ namespace PhilipGerke.StreamDeck.Awake
             };
 
             // Add command line arguments
-            if (Settings.DisplayOn)
+            if (Settings.UsePtConfig == true)
+            {
+                psi.ArgumentList.Add("--use-pt-config");
+                //psi.ArgumentList.Add("true");
+            }
+            if (Settings.DisplayOn == true)
             {
                 psi.ArgumentList.Add("--display-on");
-                psi.ArgumentList.Add("true");
+                //psi.ArgumentList.Add("true");
             }
-            if (Settings.TimeLimit > 0)
+            if (Settings.TimeLimit.HasValue && Settings.TimeLimit > 0)
             {
                 psi.ArgumentList.Add("--time-limit");
-                psi.ArgumentList.Add(Settings.TimeLimit.ToString());
+                psi.ArgumentList.Add(Settings.TimeLimit.Value.ToString());
             }
 
             return psi;

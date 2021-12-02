@@ -54,6 +54,11 @@
                 Gets or sets the path to the Awake executable.
             </summary>
         </member>
+        <member name="P:PhilipGerke.StreamDeck.Awake.Settings.UsePtConfig">
+            <summary>
+                Gets or sets whether to use the PowerToys config from settings.json. If enabled, other options will be ignored.
+            </summary>
+        </member>
         <member name="P:PhilipGerke.StreamDeck.Awake.Settings.DisplayOn">
             <summary>
                 Gets or sets whether the screens should be kept on or off while the machine is kept awake.
