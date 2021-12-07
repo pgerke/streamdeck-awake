@@ -88,6 +88,7 @@ namespace PhilipGerke.StreamDeck.Awake
 
         private ProcessStartInfo CreateProcessStartInfo()
         {
+            Settings.SetExecutablePathIfEmpty();
             ProcessStartInfo psi = new()
             {
                 CreateNoWindow = true,
@@ -98,15 +99,13 @@ namespace PhilipGerke.StreamDeck.Awake
             };
 
             // Add command line arguments
-            if (Settings.UsePtConfig == true)
+            if (Settings.UsePtConfig.HasValue && Settings.UsePtConfig.Value)
             {
                 psi.ArgumentList.Add("--use-pt-config");
-                //psi.ArgumentList.Add("true");
             }
-            if (Settings.DisplayOn == true)
+            if (Settings.DisplayOn.HasValue && Settings.DisplayOn.Value)
             {
                 psi.ArgumentList.Add("--display-on");
-                //psi.ArgumentList.Add("true");
             }
             if (Settings.TimeLimit.HasValue && Settings.TimeLimit > 0)
             {

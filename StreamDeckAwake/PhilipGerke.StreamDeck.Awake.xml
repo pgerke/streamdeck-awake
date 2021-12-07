@@ -69,5 +69,10 @@
                 Gets or sets the duration, in seconds, during which Awake keeps the computer awake. Can be used in combination with <see cref="P:PhilipGerke.StreamDeck.Awake.Settings.DisplayOn"/>.
             </summary>
         </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.Settings.SetExecutablePathIfEmpty">
+            <summary>
+                Sets the default path for the Awake executable if it is not set explicitly.
+            </summary>
+        </member>
     </members>
 </doc>

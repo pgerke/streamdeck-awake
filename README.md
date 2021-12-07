@@ -4,17 +4,18 @@ A PowerToys Awake plugin for the Elgato Stream Deck implemented in .NET6
 
 ## Prerequisites
 
-- Microsoft PowerToys have to be installed on the system. At the time of writing I was using v0.49.1.
+- Microsoft PowerToys have to be installed on the system. At the time of the last update I was using v0.51.1.
 
 ## Functionality
 
 - Toggle the Awake function with the press of a button
+- Option to use the PowerToys config (thanks [@jploo](https://github.com/jploo))
+- Option to keep the display on
+- Timed awake
 
 ### Possible extensions
 
 - Integrated keep awake: Remove dependency to PowerToys
-- Option to keep the display on
-- Timed awake
 
 ## I found a bug, what do I do?
 

@@ -13,7 +13,7 @@
     <AssemblyOriginatorKeyFile>../pg.sd.awake.snk</AssemblyOriginatorKeyFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>PhilipGerke.StreamDeck.Awake</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>Philip Gerke</Authors>
     <Company>Ingenieurbüro Philip Gerke</Company>
     <Product>Stream Deck Awake</Product>

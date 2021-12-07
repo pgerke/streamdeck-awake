@@ -12,7 +12,7 @@ namespace PhilipGerke.StreamDeck.Awake
         ///     Gets or sets the path to the Awake executable.
         /// </summary>
         [JsonProperty("awakeExePath", Required = Required.Always)]
-        public string AwakeExecutablePath { get; set; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"\PowerToys\modules\Awake\PowerToys.Awake.exe");
+        public string AwakeExecutablePath { get; set; }
 
         /// <summary>
         ///     Gets or sets whether to use the PowerToys config from settings.json. If enabled, other options will be ignored.
@@ -31,5 +31,14 @@ namespace PhilipGerke.StreamDeck.Awake
         /// </summary>
         [JsonProperty("timeLimit")]
         public uint? TimeLimit { get; set; }
+
+        /// <summary>
+        ///     Sets the default path for the Awake executable if it is not set explicitly.
+        /// </summary>
+        public void SetExecutablePathIfEmpty()
+        {
+            if (string.IsNullOrWhiteSpace(AwakeExecutablePath)) AwakeExecutablePath =
+                    Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"\PowerToys\modules\Awake\PowerToys.Awake.exe");
+        }
     }
 }
