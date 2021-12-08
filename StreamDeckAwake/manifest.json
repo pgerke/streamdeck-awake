@@ -33,7 +33,7 @@
   "Name": "PowerToys Awake",
   "Icon": "Images/pluginIcon",
   "URL": "https://github.com/pgerke/streamdeck-awake/",
-  "Version": "1.1.0",
+  "Version": "2.0.0",
   "OS": [
     {
       "Platform": "windows",

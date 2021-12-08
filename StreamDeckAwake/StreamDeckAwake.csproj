@@ -13,11 +13,11 @@
     <AssemblyOriginatorKeyFile>../pg.sd.awake.snk</AssemblyOriginatorKeyFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>PhilipGerke.StreamDeck.Awake</PackageId>
-    <Version>1.1.0</Version>
+    <Version>2.0.0-preview.1</Version>
     <Authors>Philip Gerke</Authors>
     <Company>Ingenieurbüro Philip Gerke</Company>
     <Product>Stream Deck Awake</Product>
-    <Description>A plugin for the Elgato Stream Deck that uses the Power Toys Awake tool to prevent the PC from going into standby.</Description>
+    <Description>A Power Toys Awake inspired plugin for the Elgato Stream Deck to prevent the PC from going into standby.</Description>
     <Copyright>Philip Gerke © 2021</Copyright>
     <PackageProjectUrl>https://github.com/pgerke/streamdeck-awake</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pgerke/streamdeck-awake</RepositoryUrl>

@@ -39,6 +39,20 @@
         <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.ReceivedSettings(BarRaider.SdTools.ReceivedSettingsPayload)">
             <inheritdoc />
         </member>
+        <member name="T:PhilipGerke.StreamDeck.Awake.AwakeService">
+            <summary>
+                This class allows talking to Win32 APIs without having to rely on PInvoke in other parts of the codebase.
+            </summary>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.SetAwakeState(System.Boolean)">
+            <summary>
+                Sets the computer awake state using the native Win32 SetThreadExecutionState API. This
+                function is just a nice-to-have wrapper that helps avoid tracking the success or failure of
+                the call.
+            </summary>
+            <param name="keepDisplayOn"><c>true</c>, if the display shall be kept on, <c>false</c> otherwise.</param>
+            <returns><c>true</c>, if the state was set successfully, <c>false</c> otherwise.</returns>
+        </member>
         <member name="T:PhilipGerke.StreamDeck.Awake.Program">
             <summary>
                 The entry point class.
@@ -47,11 +61,6 @@
         <member name="T:PhilipGerke.StreamDeck.Awake.Settings">
             <summary>
                 The settings for the Awake plugin.
-            </summary>
-        </member>
-        <member name="P:PhilipGerke.StreamDeck.Awake.Settings.AwakeExecutablePath">
-            <summary>
-                Gets or sets the path to the Awake executable.
             </summary>
         </member>
         <member name="P:PhilipGerke.StreamDeck.Awake.Settings.UsePtConfig">
@@ -67,11 +76,6 @@
         <member name="P:PhilipGerke.StreamDeck.Awake.Settings.TimeLimit">
             <summary>
                 Gets or sets the duration, in seconds, during which Awake keeps the computer awake. Can be used in combination with <see cref="P:PhilipGerke.StreamDeck.Awake.Settings.DisplayOn"/>.
-            </summary>
-        </member>
-        <member name="M:PhilipGerke.StreamDeck.Awake.Settings.SetExecutablePathIfEmpty">
-            <summary>
-                Sets the default path for the Awake executable if it is not set explicitly.
             </summary>
         </member>
     </members>
