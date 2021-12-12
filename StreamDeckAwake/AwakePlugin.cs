@@ -1,6 +1,7 @@
 ﻿using BarRaider.SdTools;
 using Newtonsoft.Json.Linq;
-using System.Diagnostics;
+using System.Drawing;
+using System.Reflection;
 
 namespace PhilipGerke.StreamDeck.Awake
 {
@@ -8,14 +9,23 @@ namespace PhilipGerke.StreamDeck.Awake
     ///     The Stream Deck Awake plugin.
     /// </summary>
     [PluginActionId("com.philipgerke.awake.toggle")]
-    public sealed class AwakePlugin : PluginBase
+    public sealed class AwakePlugin : PluginBase, IAwakePlugin
     {
+        private bool? state = null;
+        private readonly Image imgOn, imgOff, imgUnknown;
+
+        ISDConnection IAwakePlugin.Connection => Connection;
+        Logger IAwakePlugin.Logger => Logger.Instance;
+
+        /// <summary>
+        ///     The plugins Awake service instance.
+        /// </summary>
+        public AwakeService AwakeService { get; private set; }
+
         /// <summary>
         ///     Gets or sets the plugin settings.
         /// </summary>
         public Settings Settings { get; private set; }
-
-        public AwakeService AwakeService { get; private set; }
 
         /// <summary>
         ///     Constructs a new <see cref="AwakePlugin"/> instance.
@@ -25,7 +35,17 @@ namespace PhilipGerke.StreamDeck.Awake
         public AwakePlugin(ISDConnection connection, InitialPayload payload)
             : base(connection, payload)
         {
-            AwakeService = new AwakeService(Logger.Instance, connection);
+            // Load embedded images
+            Assembly assembly = Assembly.GetExecutingAssembly();
+#pragma warning disable CS8604 // Possible null reference argument.
+            imgOn = Image.FromStream(assembly.GetManifestResourceStream("PhilipGerke.StreamDeck.Awake.Images.awakeOn@2x.png"));
+            imgOff = Image.FromStream(assembly.GetManifestResourceStream("PhilipGerke.StreamDeck.Awake.Images.awakeOff@2x.png"));
+            imgUnknown = Image.FromStream(assembly.GetManifestResourceStream("PhilipGerke.StreamDeck.Awake.Images.awakeUnknown@2x.png"));
+#pragma warning restore CS8604 // Possible null reference argument.
+
+            // Create service instance.
+            AwakeService = new AwakeService(this);
+
             // Deserialize settings or create a new instance.
             if (payload?.Settings == null || payload.Settings.Count == 0)
             {
@@ -34,9 +54,10 @@ namespace PhilipGerke.StreamDeck.Awake
             else
             {
                 Settings = payload.Settings.ToObject<Settings>() ?? new Settings();
-                //if (File.Exists(Settings.AwakeExecutablePath)) Connection.ShowAlert().ConfigureAwait(true);
             }
-            Connection.SetStateAsync(1).ConfigureAwait(true);
+
+            // Set status to disabled
+            SetAwakeState(false).Wait();
         }
 
         /// <inheritdoc />
@@ -49,29 +70,27 @@ namespace PhilipGerke.StreamDeck.Awake
         /// <inheritdoc />
         public override void KeyPressed(KeyPayload payload)
         {
-            switch (payload.State)
+            switch (state)
             {
-                case 1 when Settings.UsePtConfig.HasValue && Settings.UsePtConfig.Value:
-                    Logger.Instance.LogMessage(TracingLevel.INFO, "Activating Awake using Microsoft PowerToys settings");
-                    // TODO: File System Watcher for PowerToys config file
-                    Connection.ShowAlert().ConfigureAwait(true);
-                    Connection.SetStateAsync(1).ConfigureAwait(true);
+                case false:
+                    if (Settings.TimeLimit is null || !uint.TryParse(Settings.TimeLimit, out uint timeLimit))
+                    {
+                        Logger.Instance.LogMessage(TracingLevel.INFO, "Activating indefinite Awake");
+                        AwakeService.StartAwakeIndefinite(OnAwakeSuccess, OnAwakeFailureOrCancelled, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
+                    }
+                    else
+                    {
+                        Logger.Instance.LogMessage(TracingLevel.INFO, $"Activating timed Awake: {Settings.TimeLimit}s");
+                        AwakeService.StartAwakeTimed(timeLimit, OnAwakeSuccess, OnAwakeFailureOrCancelled, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
+                    }
                     return;
-                case 1 when Settings.TimeLimit is null:
-                    Logger.Instance.LogMessage(TracingLevel.INFO, "Activating indefinite Awake");
-                    AwakeService.StartAwakeIndefinite(OnAwakeSuccess, OnAwakeFailureOrCancelled, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
-                    return;
-                case 1:
-                    Logger.Instance.LogMessage(TracingLevel.INFO, $"Activating timed Awake: {Settings.TimeLimit}s");
-                    AwakeService.StartAwakeTimed(Settings.TimeLimit.Value, OnAwakeSuccess, OnAwakeFailureOrCancelled, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
-                    return;
-                case 2:
+                case true:
                     Logger.Instance.LogMessage(TracingLevel.INFO, "Deactivating Awake");
                     AwakeService.StopAwake();
                     return;
                 default:
-                    Logger.Instance.LogMessage(TracingLevel.ERROR, "State is unknown!");
-                    Connection.ShowAlert().ConfigureAwait(true);
+                    Logger.Instance.LogMessage(TracingLevel.ERROR, "Plugin is in an unexpected state.");
+                    AwakeService.StopAwake();
                     return;
             }
         }
@@ -83,7 +102,23 @@ namespace PhilipGerke.StreamDeck.Awake
         /// <inheritdoc />
         public override void OnTick()
         {
-            // TODO: Update timer if Awake is active and in timed mode.
+            if (!AwakeService.TimeRemaining.HasValue) return;
+
+            string message;
+            if (AwakeService.TimeRemaining > 3600)
+            {
+                message = $"{AwakeService.TimeRemaining / 3600}h";
+            }
+            else if (AwakeService.TimeRemaining > 60)
+            {
+                message = $"{AwakeService.TimeRemaining / 60}m";
+            }
+            else
+            {
+                message = $"{AwakeService.TimeRemaining}s";
+            }
+
+            Connection.SetTitleAsync(message, 2);
         }
 
         /// <inheritdoc />
@@ -94,98 +129,42 @@ namespace PhilipGerke.StreamDeck.Awake
         public override void ReceivedSettings(ReceivedSettingsPayload payload)
         {
             Logger.Instance.LogMessage(TracingLevel.DEBUG, "Received settings.");
+
             Tools.AutoPopulateSettings(Settings, payload.Settings);
-            //if (File.Exists(Settings.AwakeExecutablePath)) Connection.ShowAlert().ConfigureAwait(true);
-            Connection.SetSettingsAsync(JObject.FromObject(Settings)).ConfigureAwait(true);
-            //psi = CreateProcessStartInfo();
+            Connection.SetSettingsAsync(JObject.FromObject(Settings)).Wait();
         }
 
-        //private ProcessStartInfo CreateProcessStartInfo()
-        //{
-        //    Settings.SetExecutablePathIfEmpty();
-        //    ProcessStartInfo psi = new()
-        //    {
-        //        CreateNoWindow = true,
-        //        FileName = Settings.AwakeExecutablePath,
-        //        UseShellExecute = false,
-        //        WindowStyle = ProcessWindowStyle.Hidden,
-        //        WorkingDirectory = Path.GetDirectoryName(Settings.AwakeExecutablePath),
-        //    };
-
-        //    // Add command line arguments
-        //    if (Settings.UsePtConfig.HasValue && Settings.UsePtConfig.Value)
-        //    {
-        //        psi.ArgumentList.Add("--use-pt-config");
-        //    }
-        //    if (Settings.DisplayOn.HasValue && Settings.DisplayOn.Value)
-        //    {
-        //        psi.ArgumentList.Add("--display-on");
-        //    }
-        //    if (Settings.TimeLimit.HasValue && Settings.TimeLimit > 0)
-        //    {
-        //        psi.ArgumentList.Add("--time-limit");
-        //        psi.ArgumentList.Add(Settings.TimeLimit.Value.ToString());
-        //    }
-
-        //    return psi;
-        //}
-
-        //private void DetectProcess()
-        //{
-        //    // If a process is already monitored, we don't do anything here.
-        //    if (process != null) return;
-
-        //    // Try to find a running Awake process
-        //    process = Process.GetProcessesByName("PowerToys.Awake").FirstOrDefault();
-        //    if (process == null)
-        //    {
-        //        // None found, so set button inactive state.
-        //        Connection.SetStateAsync(1).ConfigureAwait(true);
-        //        return;
-        //    }
-
-        //    // Start monitoring process and set button active state
-        //    process.EnableRaisingEvents = true;
-        //    process.Exited += OnProcessExited;
-        //    Connection.SetStateAsync(2).ConfigureAwait(true);
-        //}
-
-        //private void OnProcessExited(object? sender, EventArgs e)
-        //{
-        //    process?.Dispose();
-        //    process = null;
-        //}
-
-        //private bool StartAwake()
-        //{
-        //    if (process != null && !process.HasExited)
-        //    {
-        //        Logger.Instance.LogMessage(TracingLevel.ERROR, "The Awake process is already running.");
-        //        return false;
-        //    }
-
-        //    process = new()
-        //    {
-        //        StartInfo = psi,
-        //        EnableRaisingEvents = true,
-        //    };
-        //    process.Exited += OnProcessExited;
-        //    return process.Start();
-        //}
+        /// <inheritdoc />
+        public async Task SetAwakeState(bool? enabled)
+        {
+            state = enabled;
+            switch (enabled)
+            {
+                case true:
+                    await Connection.SetImageAsync(imgOn);
+                    return;
+                case false:
+                    await Connection.SetImageAsync(imgOff);
+                    return;
+                default:
+                    await Connection.SetImageAsync(imgUnknown);
+                    return;
+            }
+        }
 
         private void OnAwakeFailureOrCancelled()
         {
             string? errorMessage = "The keep-awake thread was terminated early.";
             Logger.Instance.LogMessage(TracingLevel.INFO, errorMessage);
             Logger.Instance.LogMessage(TracingLevel.DEBUG, errorMessage);
-            Connection.ShowAlert().ConfigureAwait(true);
-            Connection.SetStateAsync(1).ConfigureAwait(true);
+            Connection.ShowAlert().Wait();
+            SetAwakeState(false).Wait();
         }
 
         private void OnAwakeSuccess(bool result)
         {
             Logger.Instance.LogMessage(TracingLevel.INFO, $"Exited keep-awake thread successfully: {result}");
-            Connection.SetStateAsync(1).ConfigureAwait(true);
+            SetAwakeState(false).Wait();
         }
     }
 }

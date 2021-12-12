@@ -8,16 +8,6 @@
           "Image": "Images/awakeUnknown",
           "TitleAlignment": "middle",
           "FontSize": "16"
-        },
-        {
-          "Image": "Images/awakeOff",
-          "TitleAlignment": "middle",
-          "FontSize": "16"
-        },
-        {
-          "Image": "Images/awakeOn",
-          "TitleAlignment": "middle",
-          "FontSize": "16"
         }
       ],
       "SupportedInMultiActions": true,

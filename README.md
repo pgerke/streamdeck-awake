@@ -2,20 +2,11 @@
 
 A Power Toys Awake inspired plugin for the Elgato Stream Deck to prevent the PC from going into standby.
 
-## Prerequisites
-
-- Microsoft PowerToys have to be installed on the system, if you wish to re-use your PowerToys Awake config.
-
 ## Functionality
 
-- Toggle the Awake function with the press of a button
-- Option to use the PowerToys config (thanks [@jploo](https://github.com/jploo))
-- Option to keep the display on
-- Timed awake: Keep your system awake for a preset time.
-
-### Possible extensions
-
-- Integrated keep awake: Remove dependency to PowerToys
+- Keep your machine from going to sleep with the press of a button
+- Optionally keep the display on while Awake is active.
+- Temporary Awake: Keep your system awake for a preset time.
 
 ## I found a bug, what do I do?
 
