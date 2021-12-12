@@ -1,21 +1,12 @@
 # streamdeck-awake
 
-A PowerToys Awake plugin for the Elgato Stream Deck implemented in .NET6
-
-## Prerequisites
-
-- Microsoft PowerToys have to be installed on the system. At the time of the last update I was using v0.51.1.
+A Power Toys Awake inspired plugin for the Elgato Stream Deck to prevent the PC from going into standby.
 
 ## Functionality
 
-- Toggle the Awake function with the press of a button
-- Option to use the PowerToys config (thanks [@jploo](https://github.com/jploo))
-- Option to keep the display on
-- Timed awake
-
-### Possible extensions
-
-- Integrated keep awake: Remove dependency to PowerToys
+- Keep your machine from going to sleep with the press of a button
+- Optionally keep the display on while Awake is active.
+- Temporary Awake: Keep your system awake for a preset time.
 
 ## I found a bug, what do I do?
 
@@ -47,7 +38,7 @@ The free@home plugin for the Elgato Stream Deck does not use cookies or tracking
 | :---------------------------------------------------------------- | :-----: | -------: |
 | [Bootstrap Icons](https://icons.getbootstrap.com/)                |   MIT   |   v1.7.0 |
 | [StreamDeck-Tools](https://github.com/BarRaider/streamdeck-tools) |         |   v3.2.0 |
-| [Microsoft PowerToys](https://github.com/microsoft/PowerToys)     |   MIT   |  v0.49.1 |
+| [Microsoft PowerToys](https://github.com/microsoft/PowerToys)     |   MIT   |  v0.51.1 |
 | [Microsoft .NET](https://github.com/microsoft/dotnet)             |   MIT   | v6.0.100 |
 
 <hr>
