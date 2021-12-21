@@ -18,12 +18,14 @@
   ],
   "SDKVersion": 2,
   "Author": "Philip Gerke",
+  "Category": "Philip Gerke",
+  "CategoryIcon": "Images/categoryIcon",
   "CodePath": "com.philipgerke.awake",
   "Description": "A PowerToys Awake plugin for the Elgato Stream Deck",
   "Name": "PowerToys Awake",
   "Icon": "Images/pluginIcon",
   "URL": "https://github.com/pgerke/streamdeck-awake/",
-  "Version": "2.0.0",
+  "Version": "2.0.1",
   "OS": [
     {
       "Platform": "windows",
