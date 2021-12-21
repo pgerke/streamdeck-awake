@@ -23,7 +23,7 @@ Released 07.12.2021
 
 ## v1.0.0 - Initial Release
 
-Released xx.12.2021
+Released 28.11.2021
 
 - Toggle the PowerToys Awake function
 
