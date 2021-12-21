@@ -11,7 +11,7 @@
         }
       ],
       "SupportedInMultiActions": true,
-      "Tooltip": "Toggles the PowerToys Awake function",
+      "Tooltip": "Toggles the Awake function",
       "UUID": "com.philipgerke.awake.toggle",
       "PropertyInspectorPath": "PropertyInspector/Awake.html"
     }
@@ -21,8 +21,8 @@
   "Category": "Philip Gerke",
   "CategoryIcon": "Images/categoryIcon",
   "CodePath": "com.philipgerke.awake",
-  "Description": "A PowerToys Awake plugin for the Elgato Stream Deck",
-  "Name": "PowerToys Awake",
+  "Description": "An Awake plugin for the Elgato Stream Deck",
+  "Name": "Awake",
   "Icon": "Images/pluginIcon",
   "URL": "https://github.com/pgerke/streamdeck-awake/",
   "Version": "2.0.1",
