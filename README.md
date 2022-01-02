@@ -8,6 +8,17 @@ A Power Toys Awake inspired plugin for the Elgato Stream Deck to prevent the PC 
 - Optionally keep the display on while Awake is active.
 - Temporary Awake: Keep your system awake for a preset time.
 
+## Legend
+
+The following button states are used:
+
+| Icon                                                          | Description                                                |
+| :------------------------------------------------------------ | :--------------------------------------------------------- |
+| ![Awake Off](StreamDeckAwake/Images/awakeOff@2x.png)          | Awake is inactive                                          |
+| ![Awake On](StreamDeckAwake/Images/awakeOn@2x.png)            | Awake is active                                            |
+| ![Timed Awake On](StreamDeckAwake/Images/awakeOnTimed@2x.png) | Awake is active with a timer (here: 3 minutes remaining)   |
+| ![Awake Unknown](StreamDeckAwake/Images/awakeUnknown@2x.png)  | Awake state is unknown. Something is wrong if you see this |
+
 ## I found a bug, what do I do?
 
 I'm happy to hear any feedback regarding the plugin or it's implementation, be it critizism, praise or rants. Please create a [GitHub issue](https://github.com/pgerke/streamdeck-awake/issues) or drop me an [email](mailto:info@philipgerke.com) if you would like to contact me.
