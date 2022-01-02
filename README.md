@@ -8,7 +8,7 @@ A Power Toys Awake inspired plugin for the Elgato Stream Deck to prevent the PC 
 - Optionally keep the display on while Awake is active.
 - Temporary Awake: Keep your system awake for a preset time.
 
-## Legend
+## Button States
 
 The following button states are used:
 
