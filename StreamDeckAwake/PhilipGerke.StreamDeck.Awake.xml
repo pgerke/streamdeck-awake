@@ -4,6 +4,21 @@
         <name>com.philipgerke.awake</name>
     </assembly>
     <members>
+        <member name="T:PhilipGerke.StreamDeck.Awake.AwakeFile">
+            <summary>
+                The serialization class for the persisted awake settings.
+            </summary>
+        </member>
+        <member name="P:PhilipGerke.StreamDeck.Awake.AwakeFile.DisplayOn">
+            <summary>
+                Gets or sets whether the screens should be kept on or off while the machine is kept awake.
+            </summary>
+        </member>
+        <member name="P:PhilipGerke.StreamDeck.Awake.AwakeFile.Ticks">
+            <summary>
+                Gets or sets the ticks representing the <see cref="T:System.DateTimeOffset"/> when the Awake timer expires in UTC.
+            </summary>
+        </member>
         <member name="T:PhilipGerke.StreamDeck.Awake.AwakePlugin">
             <summary>
                 The Stream Deck Awake plugin.
@@ -47,6 +62,12 @@
         <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.SetAwakeState(System.Nullable{System.Boolean})">
             <inheritdoc />
         </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.OnAwakeFailureOrCancelled">
+            <inheritdoc />
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakePlugin.OnAwakeSuccess(System.Boolean)">
+            <inheritdoc />
+        </member>
         <member name="T:PhilipGerke.StreamDeck.Awake.AwakeService">
             <summary>
                 The Awake service.
@@ -75,27 +96,29 @@
             </summary>
             <param name="plugin">The instance of the Awake plugin.</param>
         </member>
-        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.StartAwakeIndefinite(System.Action{System.Boolean},System.Action,System.Boolean)">
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.ResumePreviousState">
+            <summary>
+                Resumes the previous Awake state if an Awake file is detected.
+            </summary>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.StartAwakeIndefinite(System.Boolean)">
             <summary>
                 Starts keeping the machine awake indefinitely
             </summary>
-            <param name="onCompletion">The callback action to be executed when the keep awake task has completed successfully.</param>
-            <param name="onFailure">The callback action to be executed when the keep awake task ended prematurely.</param>
             <param name="keepDisplayOn"><c>true</c>, if the display shall be kept on, <c>false</c> otherwise.</param>
         </member>
-        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.StartAwakeTimed(System.UInt32,System.Action{System.Boolean},System.Action,System.Boolean)">
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.StartAwakeTimed(System.UInt32,System.Boolean)">
             <summary>
                 Starts keeping the machine awake for the specified number of seconds
             </summary>
             <param name="seconds">The number of seconds that the machine shall be kept awake.</param>
-            <param name="onCompletion">The callback action to be executed when the keep awake task has completed successfully.</param>
-            <param name="onFailure">The callback action to be executed when the keep awake task ended prematurely.</param>
             <param name="keepDisplayOn"><c>true</c>, if the display shall be kept on, <c>false</c> otherwise.</param>
         </member>
-        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.StopAwake">
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.StopAwake(System.Boolean)">
             <summary>
                 Stops keeping the machine awake.
             </summary>
+            <param name="leaveAwakeFile">Determines if the Awake file shall be deleted.</param>
         </member>
         <member name="T:PhilipGerke.StreamDeck.Awake.ExecutionState">
             <summary>
@@ -136,6 +159,17 @@
             <summary>
                 Gets the Stream Deck tools logger instance.
             </summary>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.IAwakePlugin.OnAwakeFailureOrCancelled">
+            <summary>
+                The callback action to be executed when the Awake process was cancelled or failed.
+            </summary>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.IAwakePlugin.OnAwakeSuccess(System.Boolean)">
+            <summary>
+                The callback action to be executed when the Awake process was completed normally.
+            </summary>
+            <param name="result">Determines if the process was completed successfully.</param>
         </member>
         <member name="M:PhilipGerke.StreamDeck.Awake.IAwakePlugin.SetAwakeState(System.Nullable{System.Boolean})">
             <summary>

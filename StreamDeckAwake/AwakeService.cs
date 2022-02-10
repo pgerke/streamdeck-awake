@@ -1,4 +1,5 @@
 ﻿using BarRaider.SdTools;
+using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 
 namespace PhilipGerke.StreamDeck.Awake
@@ -9,8 +10,12 @@ namespace PhilipGerke.StreamDeck.Awake
     /// <remarks>
     ///     This class allows talking to Win32 APIs without having to rely on PInvoke in other parts of the codebase.
     /// </remarks>
-    public class AwakeService
+    public sealed class AwakeService
     {
+        private const string AwakeFileName = ".awake";
+
+        private static readonly string awakeFilePath = Path.Combine(Path.GetTempPath(), AwakeFileName);
+        private static readonly JsonSerializer serializer = new();
         private static CancellationTokenSource tokenSource = new();
         private static CancellationToken threadToken;
 
@@ -22,6 +27,36 @@ namespace PhilipGerke.StreamDeck.Awake
 
         [DllImport("kernel32.dll")]
         private static extern uint GetCurrentThreadId();
+
+        private static void CreateAwakeFile(bool displayOn, long? timerTicks = null)
+        {
+            FileStream awakeFileStream = File.Create(awakeFilePath);
+            using StreamWriter streamWriter = new(awakeFileStream);
+            serializer.Serialize(streamWriter, new AwakeFile() { DisplayOn = displayOn, Ticks = timerTicks });
+            if (timerTicks is not null) streamWriter.WriteLine(timerTicks);
+            streamWriter.Close();
+        }
+
+        private static void DeleteAwakeFile() => File.Delete(awakeFilePath);
+
+        private static AwakeFile? ReadAwakeFile()
+        {
+            if (!File.Exists(awakeFilePath))
+            {
+                return null;
+            }
+
+            using StreamReader streamReader = File.OpenText(awakeFilePath);
+            using JsonReader jsonReader = new JsonTextReader(streamReader);
+            try
+            {
+                return serializer.Deserialize<AwakeFile>(jsonReader);
+            }
+            catch // I don't really care if something goes wrong during deserialization
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         ///     Sets the computer awake state using the native Win32 SetThreadExecutionState API. This
@@ -62,41 +97,67 @@ namespace PhilipGerke.StreamDeck.Awake
         /// <param name="plugin">The instance of the Awake plugin.</param>
         public AwakeService(IAwakePlugin plugin)
         {
-            this.plugin = plugin;
+            this.plugin = plugin;            
+        }
+
+        /// <summary>
+        ///     Resumes the previous Awake state if an Awake file is detected.
+        /// </summary>
+        public void ResumePreviousState()
+        {
+            AwakeFile? awakeFile = ReadAwakeFile();
+            if (awakeFile == null)
+            {
+                return;
+            }
+
+            if (awakeFile.Ticks.HasValue)
+            {
+                long expires = awakeFile.Ticks.Value - DateTimeOffset.UtcNow.Ticks;
+                if (expires <= 0) // timer has expired already
+                {
+                    DeleteAwakeFile();
+                    return;
+                }
+
+                var seconds = expires / TimeSpan.TicksPerSecond;
+                StartAwakeTimed(Convert.ToUInt32(seconds), awakeFile.DisplayOn);
+            }
+            else
+            {
+                StartAwakeIndefinite(awakeFile.DisplayOn);
+            }
         }
 
         /// <summary>
         ///     Starts keeping the machine awake indefinitely
         /// </summary>
-        /// <param name="onCompletion">The callback action to be executed when the keep awake task has completed successfully.</param>
-        /// <param name="onFailure">The callback action to be executed when the keep awake task ended prematurely.</param>
         /// <param name="keepDisplayOn"><c>true</c>, if the display shall be kept on, <c>false</c> otherwise.</param>
-        public void StartAwakeIndefinite(Action<bool> onCompletion, Action onFailure, bool keepDisplayOn = false)
+        public void StartAwakeIndefinite(bool keepDisplayOn = false)
         {
-            StartAwake("Confirmed background thread cancellation when setting indefinite keep awake.", () => RunIndefiniteLoop(keepDisplayOn), onCompletion, onFailure);
+            StartAwake("Confirmed background thread cancellation when setting indefinite keep awake.", () => RunIndefiniteLoop(keepDisplayOn));
         }
 
         /// <summary>
         ///     Starts keeping the machine awake for the specified number of seconds
         /// </summary>
         /// <param name="seconds">The number of seconds that the machine shall be kept awake.</param>
-        /// <param name="onCompletion">The callback action to be executed when the keep awake task has completed successfully.</param>
-        /// <param name="onFailure">The callback action to be executed when the keep awake task ended prematurely.</param>
         /// <param name="keepDisplayOn"><c>true</c>, if the display shall be kept on, <c>false</c> otherwise.</param>
-        public void StartAwakeTimed(uint seconds, Action<bool> onCompletion, Action onFailure, bool keepDisplayOn = true)
+        public void StartAwakeTimed(uint seconds, bool keepDisplayOn = true)
         {
-            StartAwake("Confirmed background thread cancellation when setting timed keep awake.", () => RunTimedLoop(seconds, keepDisplayOn), onCompletion, onFailure);
+            StartAwake("Confirmed background thread cancellation when setting timed keep awake.", () => RunTimedLoop(seconds, keepDisplayOn));
         }
 
         /// <summary>
         ///     Stops keeping the machine awake.
         /// </summary>
-        public void StopAwake()
+        /// <param name="leaveAwakeFile">Determines if the Awake file shall be deleted.</param>
+        public void StopAwake(bool leaveAwakeFile)
         {
-            CancelRunnerThread("Confirmed background thread cancellation when disabling explicit keep awake.");
+            CancelRunnerThread("Confirmed background thread cancellation when disabling explicit keep awake.", leaveAwakeFile);
         }
 
-        private void CancelRunnerThread(string message)
+        private void CancelRunnerThread(string message, bool leaveAwakeFile)
         {
             tokenSource.Cancel();
 
@@ -111,7 +172,8 @@ namespace PhilipGerke.StreamDeck.Awake
             {
                 plugin.Logger.LogMessage(TracingLevel.INFO, message);
             }
-            plugin.SetAwakeState(false).Wait();
+            
+            if(!leaveAwakeFile) DeleteAwakeFile();
         }
 
         private bool RunIndefiniteLoop(bool keepDisplayOn)
@@ -123,6 +185,7 @@ namespace PhilipGerke.StreamDeck.Awake
                 if (success)
                 {
                     plugin.Logger.LogMessage(TracingLevel.INFO, $"Initiated indefinite keep awake in background thread: {GetCurrentThreadId()}. Screen on: {keepDisplayOn}");
+                    CreateAwakeFile(keepDisplayOn);
 
                     WaitHandle.WaitAny(new[] { threadToken.WaitHandle });
 
@@ -154,6 +217,7 @@ namespace PhilipGerke.StreamDeck.Awake
                 if (success)
                 {
                     plugin.Logger.LogMessage(TracingLevel.INFO, $"Initiated temporary keep awake in background thread: {GetCurrentThreadId()}. Screen on: {keepDisplayOn}");
+                    CreateAwakeFile(keepDisplayOn, DateTimeOffset.UtcNow.AddSeconds(seconds).UtcTicks);
 
                     TimeRemaining = seconds;
                     uint elapsedSeconds = 0;
@@ -169,6 +233,7 @@ namespace PhilipGerke.StreamDeck.Awake
 
                         tokenSource.Cancel();
                         timedLoopTimer.Stop();
+                        DeleteAwakeFile();
                     };
 
                     timedLoopTimer.Disposed += (s, e) =>
@@ -199,10 +264,10 @@ namespace PhilipGerke.StreamDeck.Awake
             }
         }
 
-        private void StartAwake(string cancellationMessage, Func<bool> runnerFunction, Action<bool> onCompletion, Action onFailure)
+        private void StartAwake(string cancellationMessage, Func<bool> runnerFunction)
         {
             // Cancel existing runner thread (if exists)
-            CancelRunnerThread(cancellationMessage);
+            CancelRunnerThread(cancellationMessage, false);
 
             // Recreate token source and token
             tokenSource = new CancellationTokenSource();
@@ -210,8 +275,8 @@ namespace PhilipGerke.StreamDeck.Awake
 
             // Create new runner thread
             runnerThread = Task.Run(runnerFunction, threadToken)
-                .ContinueWith((result) => onCompletion(result.Result), TaskContinuationOptions.OnlyOnRanToCompletion)
-                .ContinueWith((result) => onFailure, TaskContinuationOptions.NotOnRanToCompletion);
+                .ContinueWith((result) => plugin.OnAwakeSuccess(result.Result), TaskContinuationOptions.OnlyOnRanToCompletion)
+                .ContinueWith((result) => plugin.OnAwakeFailureOrCancelled(), TaskContinuationOptions.NotOnRanToCompletion);            
             plugin.SetAwakeState(true).Wait();
         }
     }
