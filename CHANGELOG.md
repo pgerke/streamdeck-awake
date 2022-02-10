@@ -1,5 +1,11 @@
 # StreamDeck Awake Changelog
 
+## v2.1.0
+
+Released 10.02.2022
+
+- Preserve Awake state when system was locked.
+
 ## v2.0.1
 
 Released 21.12.2021

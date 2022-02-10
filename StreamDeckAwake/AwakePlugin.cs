@@ -11,6 +11,7 @@ namespace PhilipGerke.StreamDeck.Awake
     [PluginActionId("com.philipgerke.awake.toggle")]
     public sealed class AwakePlugin : PluginBase, IAwakePlugin
     {
+        private bool firstTick = true;
         private bool? state = null;
         private readonly Image imgOn, imgOff, imgUnknown;
 
@@ -64,7 +65,7 @@ namespace PhilipGerke.StreamDeck.Awake
         public override void Dispose()
         {
             Logger.Instance.LogMessage(TracingLevel.DEBUG, "The plugin instance is being disposed. Awake process will be stopped.");
-            AwakeService.StopAwake();
+            AwakeService.StopAwake(true);
         }
 
         /// <inheritdoc />
@@ -76,21 +77,21 @@ namespace PhilipGerke.StreamDeck.Awake
                     if (Settings.TimeLimit is null || !uint.TryParse(Settings.TimeLimit, out uint timeLimit))
                     {
                         Logger.Instance.LogMessage(TracingLevel.INFO, "Activating indefinite Awake");
-                        AwakeService.StartAwakeIndefinite(OnAwakeSuccess, OnAwakeFailureOrCancelled, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
+                        AwakeService.StartAwakeIndefinite(Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
                     }
                     else
                     {
                         Logger.Instance.LogMessage(TracingLevel.INFO, $"Activating timed Awake: {Settings.TimeLimit}s");
-                        AwakeService.StartAwakeTimed(timeLimit, OnAwakeSuccess, OnAwakeFailureOrCancelled, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
+                        AwakeService.StartAwakeTimed(timeLimit, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
                     }
                     return;
                 case true:
                     Logger.Instance.LogMessage(TracingLevel.INFO, "Deactivating Awake");
-                    AwakeService.StopAwake();
+                    AwakeService.StopAwake(false);
                     return;
                 default:
                     Logger.Instance.LogMessage(TracingLevel.ERROR, "Plugin is in an unexpected state.");
-                    AwakeService.StopAwake();
+                    AwakeService.StopAwake(false);
                     return;
             }
         }
@@ -102,6 +103,13 @@ namespace PhilipGerke.StreamDeck.Awake
         /// <inheritdoc />
         public override void OnTick()
         {
+            // Resume a previously paused operation on the first tick
+            if(firstTick)
+            {
+                AwakeService.ResumePreviousState();
+                firstTick = false;
+            }
+
             if (!AwakeService.TimeRemaining.HasValue) return;
 
             string message;
@@ -152,7 +160,8 @@ namespace PhilipGerke.StreamDeck.Awake
             }
         }
 
-        private void OnAwakeFailureOrCancelled()
+        /// <inheritdoc />
+        public void OnAwakeFailureOrCancelled()
         {
             string? errorMessage = "The keep-awake thread was terminated early.";
             Logger.Instance.LogMessage(TracingLevel.INFO, errorMessage);
@@ -161,7 +170,8 @@ namespace PhilipGerke.StreamDeck.Awake
             SetAwakeState(false).Wait();
         }
 
-        private void OnAwakeSuccess(bool result)
+        /// <inheritdoc />
+        public void OnAwakeSuccess(bool result)
         {
             Logger.Instance.LogMessage(TracingLevel.INFO, $"Exited keep-awake thread successfully: {result}");
             SetAwakeState(false).Wait();
