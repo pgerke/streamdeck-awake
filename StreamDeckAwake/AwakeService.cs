@@ -14,6 +14,7 @@ namespace PhilipGerke.StreamDeck.Awake
     {
         private const string AwakeFileName = ".awake";
 
+        private static AwakeService? instance;
         private static readonly string awakeFilePath = Path.Combine(Path.GetTempPath(), AwakeFileName);
         private static readonly JsonSerializer serializer = new();
         private static CancellationTokenSource tokenSource = new();
@@ -38,6 +39,16 @@ namespace PhilipGerke.StreamDeck.Awake
         }
 
         private static void DeleteAwakeFile() => File.Delete(awakeFilePath);
+
+        /// <summary>
+        /// Gets the singleton <see cref="AwakeService"/> instance.
+        /// </summary>
+        /// <returns>The instance.</returns>
+        public static AwakeService GetInstance()
+        {
+            instance ??= new();
+            return instance;
+        }
 
         private static AwakeFile? ReadAwakeFile()
         {
@@ -84,7 +95,29 @@ namespace PhilipGerke.StreamDeck.Awake
                 : SetAwakeState(ExecutionState.SystemRequired | ExecutionState.Continuous);
         }
 
-        private readonly IAwakePlugin plugin;
+        private IAwakePlugin? plugin;
+
+        /// <summary>
+        ///     Disconnects the currently connected plugin instance from the service.
+        /// </summary>
+        public void ClearPluginInstance() => plugin = null;
+
+        /// <summary>
+        ///     Connects the specified plugin instance to the Awake service
+        /// </summary>
+        /// <remarks>An existing instance will be overridden.</remarks>
+        /// <param name="instance">The <see cref="IAwakePlugin"/> instance to be connected.</param>
+        public void SetPluginInstance(IAwakePlugin instance)
+        {
+            if (plugin != null)
+            {
+                plugin.Logger.LogMessage(TracingLevel.WARN, "Connection to the Awake service was overriden by another plugin instance.");
+            }
+
+            instance.Logger.LogMessage(TracingLevel.INFO, "Connected to the Awake service.");
+            plugin = instance;
+
+        }
 
         /// <summary>
         ///     Gets or sets the remaining time on a timed Awake, or <c>null</c>, if no timer is enabled.
@@ -92,18 +125,14 @@ namespace PhilipGerke.StreamDeck.Awake
         public uint? TimeRemaining { get; private set; }
 
         /// <summary>
-        ///     Constructs a new instance of the <see cref="AwakeService"/>.
+        ///     Gets whether or not the machine is currently being kept awake.
         /// </summary>
-        /// <param name="plugin">The instance of the Awake plugin.</param>
-        public AwakeService(IAwakePlugin plugin)
-        {
-            this.plugin = plugin;            
-        }
+        public static bool IsEnabled => !runnerThread?.IsCompleted ?? false;
 
         /// <summary>
-        ///     Resumes the previous Awake state if an Awake file is detected.
+        ///     Constructs a new instance of the <see cref="AwakeService"/>.
         /// </summary>
-        public void ResumePreviousState()
+        private AwakeService() 
         {
             AwakeFile? awakeFile = ReadAwakeFile();
             if (awakeFile == null)
@@ -152,10 +181,7 @@ namespace PhilipGerke.StreamDeck.Awake
         ///     Stops keeping the machine awake.
         /// </summary>
         /// <param name="leaveAwakeFile">Determines if the Awake file shall be deleted.</param>
-        public void StopAwake(bool leaveAwakeFile)
-        {
-            CancelRunnerThread("Confirmed background thread cancellation when disabling explicit keep awake.", leaveAwakeFile);
-        }
+        public void StopAwake(bool leaveAwakeFile) => CancelRunnerThread("Confirmed background thread cancellation when disabling explicit keep awake.", leaveAwakeFile);
 
         private void CancelRunnerThread(string message, bool leaveAwakeFile)
         {
@@ -170,7 +196,7 @@ namespace PhilipGerke.StreamDeck.Awake
             }
             catch (OperationCanceledException)
             {
-                plugin.Logger.LogMessage(TracingLevel.INFO, message);
+                plugin?.Logger.LogMessage(TracingLevel.INFO, message);
             }
             
             if(!leaveAwakeFile) DeleteAwakeFile();
@@ -184,7 +210,7 @@ namespace PhilipGerke.StreamDeck.Awake
             {
                 if (success)
                 {
-                    plugin.Logger.LogMessage(TracingLevel.INFO, $"Initiated indefinite keep awake in background thread: {GetCurrentThreadId()}. Screen on: {keepDisplayOn}");
+                    plugin?.Logger.LogMessage(TracingLevel.INFO, $"Initiated indefinite keep awake in background thread: {GetCurrentThreadId()}. Screen on: {keepDisplayOn}");
                     CreateAwakeFile(keepDisplayOn);
 
                     WaitHandle.WaitAny(new[] { threadToken.WaitHandle });
@@ -193,13 +219,13 @@ namespace PhilipGerke.StreamDeck.Awake
                 }
                 else
                 {
-                    plugin.Logger.LogMessage(TracingLevel.INFO, "Could not successfully set up indefinite keep awake.");
+                    plugin?.Logger.LogMessage(TracingLevel.INFO, "Could not successfully set up indefinite keep awake.");
                     return success;
                 }
             }
             catch (OperationCanceledException ex)
             {
-                plugin.Logger.LogMessage(TracingLevel.INFO, $"Background thread termination: {GetCurrentThreadId()}. Message: {ex.Message}");
+                plugin?.Logger.LogMessage(TracingLevel.INFO, $"Background thread termination: {GetCurrentThreadId()}. Message: {ex.Message}");
                 return success;
             }
         }
@@ -216,7 +242,7 @@ namespace PhilipGerke.StreamDeck.Awake
 
                 if (success)
                 {
-                    plugin.Logger.LogMessage(TracingLevel.INFO, $"Initiated temporary keep awake in background thread: {GetCurrentThreadId()}. Screen on: {keepDisplayOn}");
+                    plugin?.Logger.LogMessage(TracingLevel.INFO, $"Initiated temporary keep awake in background thread: {GetCurrentThreadId()}. Screen on: {keepDisplayOn}");
                     CreateAwakeFile(keepDisplayOn, DateTimeOffset.UtcNow.AddSeconds(seconds).UtcTicks);
 
                     TimeRemaining = seconds;
@@ -239,8 +265,8 @@ namespace PhilipGerke.StreamDeck.Awake
                     timedLoopTimer.Disposed += (s, e) =>
                     {
                         TimeRemaining = null;
-                        plugin.Connection.SetTitleAsync(string.Empty, 2);
-                        plugin.Logger.LogMessage(TracingLevel.INFO, "Old timer disposed.");
+                        plugin?.Connection.SetTitleAsync(string.Empty, 2);
+                        plugin?.Logger.LogMessage(TracingLevel.INFO, "Old timer disposed.");
                     };
 
                     timedLoopTimer.Start();
@@ -253,13 +279,13 @@ namespace PhilipGerke.StreamDeck.Awake
                 }
                 else
                 {
-                    plugin.Logger.LogMessage(TracingLevel.INFO, "Could not set up timed keep-awake with display on.");
+                    plugin?.Logger.LogMessage(TracingLevel.INFO, "Could not set up timed keep-awake with display on.");
                     return success;
                 }
             }
             catch (OperationCanceledException ex)
             {
-                plugin.Logger.LogMessage(TracingLevel.INFO, $"Background thread termination: {GetCurrentThreadId()}. Message: {ex.Message}");
+                plugin?.Logger.LogMessage(TracingLevel.INFO, $"Background thread termination: {GetCurrentThreadId()}. Message: {ex.Message}");
                 return success;
             }
         }
@@ -275,9 +301,9 @@ namespace PhilipGerke.StreamDeck.Awake
 
             // Create new runner thread
             runnerThread = Task.Run(runnerFunction, threadToken)
-                .ContinueWith((result) => plugin.OnAwakeSuccess(result.Result), TaskContinuationOptions.OnlyOnRanToCompletion)
-                .ContinueWith((result) => plugin.OnAwakeFailureOrCancelled(), TaskContinuationOptions.NotOnRanToCompletion);            
-            plugin.SetAwakeState(true).Wait();
+                .ContinueWith((result) => plugin?.OnAwakeSuccess(result.Result), TaskContinuationOptions.OnlyOnRanToCompletion)
+                .ContinueWith((result) => plugin?.OnAwakeFailureOrCancelled(), TaskContinuationOptions.NotOnRanToCompletion);            
+            plugin?.SetAwakeState(true).Wait();
         }
     }
 }
