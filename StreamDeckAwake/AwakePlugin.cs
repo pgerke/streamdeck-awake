@@ -11,17 +11,11 @@ namespace PhilipGerke.StreamDeck.Awake
     [PluginActionId("com.philipgerke.awake.toggle")]
     public sealed class AwakePlugin : PluginBase, IAwakePlugin
     {
-        private bool firstTick = true;
         private bool? state = null;
         private readonly Image imgOn, imgOff, imgUnknown;
 
         ISDConnection IAwakePlugin.Connection => Connection;
         Logger IAwakePlugin.Logger => Logger.Instance;
-
-        /// <summary>
-        ///     The plugins Awake service instance.
-        /// </summary>
-        public AwakeService AwakeService { get; private set; }
 
         /// <summary>
         ///     Gets or sets the plugin settings.
@@ -44,8 +38,12 @@ namespace PhilipGerke.StreamDeck.Awake
             imgUnknown = Image.FromStream(assembly.GetManifestResourceStream("PhilipGerke.StreamDeck.Awake.Images.awakeUnknown@2x.png"));
 #pragma warning restore CS8604 // Possible null reference argument.
 
-            // Create service instance.
-            AwakeService = new AwakeService(this);
+            // Connect to service instance
+            AwakeService.GetInstance().SetPluginInstance(this);
+
+            // Set status from service
+            SetAwakeState(AwakeService.IsEnabled).Wait();
+            SetRemainingTime();
 
             // Deserialize settings or create a new instance.
             if (payload?.Settings == null || payload.Settings.Count == 0)
@@ -57,15 +55,13 @@ namespace PhilipGerke.StreamDeck.Awake
                 Settings = payload.Settings.ToObject<Settings>() ?? new Settings();
             }
 
-            // Set status to disabled
-            SetAwakeState(false).Wait();
         }
 
         /// <inheritdoc />
         public override void Dispose()
         {
-            Logger.Instance.LogMessage(TracingLevel.DEBUG, "The plugin instance is being disposed. Awake process will be stopped.");
-            AwakeService.StopAwake(true);
+            Logger.Instance.LogMessage(TracingLevel.DEBUG, "The plugin instance is being disposed. Disconnecting from Awake service.");
+            AwakeService.GetInstance().ClearPluginInstance();
         }
 
         /// <inheritdoc />
@@ -77,21 +73,21 @@ namespace PhilipGerke.StreamDeck.Awake
                     if (Settings.TimeLimit is null || !uint.TryParse(Settings.TimeLimit, out uint timeLimit))
                     {
                         Logger.Instance.LogMessage(TracingLevel.INFO, "Activating indefinite Awake");
-                        AwakeService.StartAwakeIndefinite(Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
+                        AwakeService.GetInstance().StartAwakeIndefinite(Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
                     }
                     else
                     {
                         Logger.Instance.LogMessage(TracingLevel.INFO, $"Activating timed Awake: {Settings.TimeLimit}s");
-                        AwakeService.StartAwakeTimed(timeLimit, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
+                        AwakeService.GetInstance().StartAwakeTimed(timeLimit, Settings.DisplayOn.HasValue && Settings.DisplayOn.Value);
                     }
                     return;
                 case true:
                     Logger.Instance.LogMessage(TracingLevel.INFO, "Deactivating Awake");
-                    AwakeService.StopAwake(false);
+                    AwakeService.GetInstance().StopAwake(false);
                     return;
                 default:
                     Logger.Instance.LogMessage(TracingLevel.ERROR, "Plugin is in an unexpected state.");
-                    AwakeService.StopAwake(false);
+                    AwakeService.GetInstance().StopAwake(false);
                     return;
             }
         }
@@ -101,33 +97,7 @@ namespace PhilipGerke.StreamDeck.Awake
             "The KeyReleased method has been called but is not overridden in the plugin.");
 
         /// <inheritdoc />
-        public override void OnTick()
-        {
-            // Resume a previously paused operation on the first tick
-            if(firstTick)
-            {
-                AwakeService.ResumePreviousState();
-                firstTick = false;
-            }
-
-            if (!AwakeService.TimeRemaining.HasValue) return;
-
-            string message;
-            if (AwakeService.TimeRemaining > 3600)
-            {
-                message = $"{AwakeService.TimeRemaining / 3600}h";
-            }
-            else if (AwakeService.TimeRemaining > 60)
-            {
-                message = $"{AwakeService.TimeRemaining / 60}m";
-            }
-            else
-            {
-                message = $"{AwakeService.TimeRemaining}s";
-            }
-
-            Connection.SetTitleAsync(message, 2);
-        }
+        public override void OnTick() => SetRemainingTime();
 
         /// <inheritdoc />
         public override void ReceivedGlobalSettings(ReceivedGlobalSettingsPayload payload) => Logger.Instance.LogMessage(TracingLevel.DEBUG,
@@ -158,6 +128,27 @@ namespace PhilipGerke.StreamDeck.Awake
                     await Connection.SetImageAsync(imgUnknown);
                     return;
             }
+        }
+
+        private void SetRemainingTime()
+        {
+            if (!AwakeService.GetInstance().TimeRemaining.HasValue) return;
+
+            string message;
+            if (AwakeService.GetInstance().TimeRemaining > 3600)
+            {
+                message = $"{AwakeService.GetInstance().TimeRemaining / 3600}h";
+            }
+            else if (AwakeService.GetInstance().TimeRemaining > 60)
+            {
+                message = $"{AwakeService.GetInstance().TimeRemaining / 60}m";
+            }
+            else
+            {
+                message = $"{AwakeService.GetInstance().TimeRemaining}s";
+            }
+
+            Connection.SetTitleAsync(message, 2);
         }
 
         /// <inheritdoc />

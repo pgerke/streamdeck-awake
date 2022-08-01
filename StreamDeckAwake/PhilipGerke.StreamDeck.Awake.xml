@@ -24,11 +24,6 @@
                 The Stream Deck Awake plugin.
             </summary>
         </member>
-        <member name="P:PhilipGerke.StreamDeck.Awake.AwakePlugin.AwakeService">
-            <summary>
-                The plugins Awake service instance.
-            </summary>
-        </member>
         <member name="P:PhilipGerke.StreamDeck.Awake.AwakePlugin.Settings">
             <summary>
                 Gets or sets the plugin settings.
@@ -76,6 +71,12 @@
                 This class allows talking to Win32 APIs without having to rely on PInvoke in other parts of the codebase.
             </remarks>
         </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.GetInstance">
+            <summary>
+            Gets the singleton <see cref="T:PhilipGerke.StreamDeck.Awake.AwakeService"/> instance.
+            </summary>
+            <returns>The instance.</returns>
+        </member>
         <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.SetAwakeState(System.Boolean)">
             <summary>
                 Sets the computer awake state using the native Win32 SetThreadExecutionState API. This
@@ -85,20 +86,31 @@
             <param name="keepDisplayOn"><c>true</c>, if the display shall be kept on, <c>false</c> otherwise.</param>
             <returns><c>true</c>, if the state was set successfully, <c>false</c> otherwise.</returns>
         </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.ClearPluginInstance">
+            <summary>
+                Disconnects the currently connected plugin instance from the service.
+            </summary>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.SetPluginInstance(PhilipGerke.StreamDeck.Awake.IAwakePlugin)">
+            <summary>
+                Connects the specified plugin instance to the Awake service
+            </summary>
+            <remarks>An existing instance will be overridden.</remarks>
+            <param name="instance">The <see cref="T:PhilipGerke.StreamDeck.Awake.IAwakePlugin"/> instance to be connected.</param>
+        </member>
         <member name="P:PhilipGerke.StreamDeck.Awake.AwakeService.TimeRemaining">
             <summary>
                 Gets or sets the remaining time on a timed Awake, or <c>null</c>, if no timer is enabled.
             </summary>
         </member>
-        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.#ctor(PhilipGerke.StreamDeck.Awake.IAwakePlugin)">
+        <member name="P:PhilipGerke.StreamDeck.Awake.AwakeService.IsEnabled">
+            <summary>
+                Gets whether or not the machine is currently being kept awake.
+            </summary>
+        </member>
+        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.#ctor">
             <summary>
                 Constructs a new instance of the <see cref="T:PhilipGerke.StreamDeck.Awake.AwakeService"/>.
-            </summary>
-            <param name="plugin">The instance of the Awake plugin.</param>
-        </member>
-        <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.ResumePreviousState">
-            <summary>
-                Resumes the previous Awake state if an Awake file is detected.
             </summary>
         </member>
         <member name="M:PhilipGerke.StreamDeck.Awake.AwakeService.StartAwakeIndefinite(System.Boolean)">
