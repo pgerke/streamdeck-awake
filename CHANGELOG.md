@@ -1,5 +1,11 @@
 # StreamDeck Awake Changelog
 
+## v2.1.1
+
+Released 01.08.2022
+
+- Awake will retain it's state even if the button is not currently shown.
+
 ## v2.1.0
 
 Released 10.02.2022
